@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/tommmc/microservices/homepage"
 	"github.com/tommmc/microservices/server"
 )
@@ -21,15 +22,25 @@ var (
 func main() {
 
 	logger := log.New(os.Stdout, "gcuk", log.LstdFlags|log.Lshortfile)
+	db, err := sqlx.Open("postgres", "postgress://postgres:postgres@")
+	if err != nil {
+		logger.Fatalln(err)
+	}
 
-	h := homepage.NewHandlers(logger)
+	err = db.Ping()
+	if err != nil {
+		logger.Fatalln(err)
+	}
+
+	h := homepage.NewHandlers(logger, db)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", h.Home)
+
+	h.SetupRoutes(mux)
 
 	srv := server.New(mux, GcukServiceAddr)
 
-	err := srv.ListenAndServeTLS(GcukCertFile, GcukKeyFile)
+	err = srv.ListenAndServeTLS(GcukCertFile, GcukKeyFile)
 	if err != nil {
 		logger.Fatal("server failed to start: %w", err)
 	}
