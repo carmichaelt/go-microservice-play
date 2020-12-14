@@ -1,4 +1,3 @@
 # TODO
 
-Continue the demo from youtube time 24:15.
-Next step: Moving the routes into setupRoutes method.
+Learn how to create and place the certificates needed for TLS.
